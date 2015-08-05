@@ -69,7 +69,7 @@ if __name__ == "__main__":
                         time.sleep(10)
                 logging.info("ADDER: Execution %d Passes %d Fails %d" %(execution, passes, fails))
                 logging.info("ADDER: ")
-            except Exception, e:
+            except Exception as e:
                 fails += 1
                 logging.info("ADDER: Execution %d Passes %d Fails %d" %(execution, passes, fails))
                 logging.info("ADDER: Exception caught %s" %e)
