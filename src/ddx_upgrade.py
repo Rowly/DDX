@@ -33,7 +33,7 @@ def send_upgrade_post():
                  "Authorization": "Bearer %s" %token
               }
     files = {
-               "file": ("filename", open("DDX_V0.03.bin", "rb").read(), "application/octet-stream")
+               "file": ("filename", open("DDX_V0.03.3675.bin", "rb").read(), "application/octet-stream")
             }
     r = requests.post("http://%s/%s" %(BASE_IP, target), headers=headers, files=files)
     assert(r.status_code == requests.codes.no_content)
