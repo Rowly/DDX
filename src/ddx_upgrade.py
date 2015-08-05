@@ -59,16 +59,16 @@ if __name__ == "__main__":
         try:
             execution += 1
             try:
-            busy = True
-            send_upgrade_post()
-            while busy:
-                if check_upgrade_status() == "IDLE":
-                    busy = False
-                    passes += 1
-                else:
-                    time.sleep(10)
-            logging.info("ADDER: Execution %d Passes %d Fails %d" %(execution, passes, fails))
-            logging.info("ADDER: ")
+                busy = True
+                send_upgrade_post()
+                while busy:
+                    if check_upgrade_status() == "IDLE":
+                        busy = False
+                        passes += 1
+                    else:
+                        time.sleep(10)
+                logging.info("ADDER: Execution %d Passes %d Fails %d" %(execution, passes, fails))
+                logging.info("ADDER: ")
             except Exception, e:
                 fails += 1
                 logging.info("ADDER: Execution %d Passes %d Fails %d" %(execution, passes, fails))
