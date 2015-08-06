@@ -1,5 +1,4 @@
 import requests
-from requests.exceptions import RequestException
 import logging
 import time
 
@@ -24,9 +23,14 @@ def login():
                  "username": "admin",
                  "password": "password"
               }
-    r = requests.post("http://%s/%s" %(BASE_IP, target), params=payload)
-    assert(r.status_code == requests.codes.ok)
-    return r.json()["token"]
+    try:
+        r = requests.post("http://%s/%s" %(BASE_IP, target), params=payload)
+        assert(r.status_code == requests.codes.ok)
+        return r.json()["token"]
+    except requests.exceptions.ConnectionError:
+        time.sleep(5)
+        login()
+
 
 def send_upgrade_post(filename="DDX_V0.03.3675.bin"):
     token = login()
@@ -46,12 +50,12 @@ def check_upgrade_status():
     target = "api/system/upgrade"
     try:
         r = requests.get("http://%s/%s" %(BASE_IP, target))
-    except requests.ConnectionError:
-        time.sleep(5)
+        assert(r.status_code == requests.codes.ok)
+        return r.json()["state"]
+    except requests.exceptions.ConnectionError:
+        time.sleep(10)
         login()
         check_upgrade_status()            
-    assert(r.status_code == requests.codes.ok)
-    return r.json()["state"]
 
 
 if __name__ == "__main__":
@@ -62,16 +66,19 @@ if __name__ == "__main__":
     while True:
         try:
             execution += 1
-#            try:
-            busy = True
-            send_upgrade_post()
-            while busy:
-                if check_upgrade_status() == "IDLE":
-                    busy = False
-                    passes += 1
-                else:
-                    time.sleep(10)
-            logging.info("ADDER: Execution %d Passes %d Fails %d" %(execution, passes, fails))
+            try:
+                send_upgrade_post("DDX_V0.03.3698.bin")
+                while True:
+                    if check_upgrade_status() == "IDLE":
+                        passes += 1
+                        break
+                    else:
+                        time.sleep(10)
+                logging.info("ADDER: Execution %d, Passes %d, Fails %d" %(execution, passes, fails))
+            except Exception as e:
+                fails += 1
+                logging.info("ADDER: Execution %d, Passes %d, Fails %d" %(execution, passes, fails))
+                logging.info("ADDER: %s" %e)
         except KeyboardInterrupt:
             logging_stop()
             break
