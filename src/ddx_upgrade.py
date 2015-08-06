@@ -33,7 +33,7 @@ def login():
         time.sleep(5)
         login()
 
-def send_upgrade_post():
+def send_upgrade_post(filename):
     token = login()
     target = "api/system/upgrade"
     headers = {
@@ -64,11 +64,13 @@ def test_for_fw(filename):
         send_upgrade_post(filename)
         while True:
             response_json = check_upgrade_status()
-            if (response_json["status"] == "IDLE" and response_json["error"] == 0):
+            if response_json is None:
+                response_json = check_upgrade_status()
+            if (response_json["state"] == "IDLE") and (response_json["error"] == 0):
                 PASSES += 1
                 logging.info("ADDER: Execution %d, Passes %d, Fails %d" %(EXECUTION, PASSES, FAILS))
                 break
-            elif (response_json["status"] == "IN PROGRESS" and response_json["error"] != 0):
+            elif (response_json["state"] == "IN PROGRESS") and (response_json["error"] != 0):
                 FAILS += 1
                 logging.info("ADDER: Execution %d, Passes %d, Fails %d" %(EXECUTION, PASSES, FAILS))
                 logging.info("ADDER: Error code %d" %response_json["error"])
@@ -89,8 +91,11 @@ if __name__ == "__main__":
         try:
             EXECUTION += 1
             test_for_fw("DDX_V0.03.3675.bin")
+            time.sleep(30)
             test_for_fw("DDX_V0.03.3698.bin")
+            time.sleep(30)
             test_for_fw("DDX_V0.03.3698.bin")
+            time.sleep(30)
         except KeyboardInterrupt:
             logging_stop()
             break
