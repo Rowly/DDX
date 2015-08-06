@@ -3,6 +3,9 @@ import logging
 import time
 
 BASE_IP = "192.168.1.22"
+EXECUTION = 0
+PASSES = 0
+FAILS = 0
 
 def logging_start():
     logging.basicConfig(filename="/var/log/ddx/result.log",
@@ -30,8 +33,7 @@ def login():
         time.sleep(5)
         login()
 
-
-def send_upgrade_post(filename="DDX_V0.03.3675.bin"):
+def send_upgrade_post():
     token = login()
     target = "api/system/upgrade"
     headers = {
@@ -44,39 +46,51 @@ def send_upgrade_post(filename="DDX_V0.03.3675.bin"):
     assert(r.status_code == requests.codes.no_content)
 
 def check_upgrade_status():
-
     target = "api/system/upgrade"
     try:
         r = requests.get("http://%s/%s" %(BASE_IP, target))
         assert(r.status_code == requests.codes.ok)
-        return r.json()["state"]
+        return r.json()
     except requests.exceptions.ConnectionError:
         time.sleep(10)
         login()
         check_upgrade_status()            
 
+def test_for_fw(filename):
+    global EXECUTION
+    global PASSES
+    global FAILS
+    try:
+        send_upgrade_post(filename)
+        while True:
+            response_json = check_upgrade_status()
+            if (response_json["status"] == "IDLE" and response_json["error"] == 0):
+                PASSES += 1
+                logging.info("ADDER: Execution %d, Passes %d, Fails %d" %(EXECUTION, PASSES, FAILS))
+                break
+            elif (response_json["status"] == "IN PROGRESS" and response_json["error"] != 0):
+                FAILS += 1
+                logging.info("ADDER: Execution %d, Passes %d, Fails %d" %(EXECUTION, PASSES, FAILS))
+                logging.info("ADDER: Error code %d" %response_json["error"])
+                break
+            else:
+                time.sleep(10)
+    except Exception as e:
+        FAILS += 1
+        logging.info("ADDER: Execution %d, Passes %d, Fails %d" %(EXECUTION, PASSES, FAILS))
+        logging.info("ADDER: %s" %e)
 
 if __name__ == "__main__":
+    global EXECUTION
+    global PASSES
+    global FAILS
     logging_start()
-    execution = 0
-    passes = 0
-    fails = 0
     while True:
         try:
-            execution += 1
-            try:
-                send_upgrade_post("DDX_V0.03.3698.bin")
-                while True:
-                    if check_upgrade_status() == "IDLE":
-                        passes += 1
-                        break
-                    else:
-                        time.sleep(10)
-                logging.info("ADDER: Execution %d, Passes %d, Fails %d" %(execution, passes, fails))
-            except Exception as e:
-                fails += 1
-                logging.info("ADDER: Execution %d, Passes %d, Fails %d" %(execution, passes, fails))
-                logging.info("ADDER: %s" %e)
+            EXECUTION += 1
+            test_for_fw("DDX_V0.03.3675.bin")
+            test_for_fw("DDX_V0.03.3698.bin")
+            test_for_fw("DDX_V0.03.3698.bin")
         except KeyboardInterrupt:
             logging_stop()
             break
