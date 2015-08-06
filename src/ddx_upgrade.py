@@ -17,7 +17,6 @@ def logging_stop():
     logging.shutdown()
 
 def login():
-    print("login")
     target = "api/auth/local"
     payload = {
                  "username": "admin",
@@ -34,7 +33,6 @@ def login():
 
 def send_upgrade_post(filename="DDX_V0.03.3675.bin"):
     token = login()
-    print("upgrade")
     target = "api/system/upgrade"
     headers = {
                  "Authorization": "Bearer %s" %token
@@ -46,7 +44,7 @@ def send_upgrade_post(filename="DDX_V0.03.3675.bin"):
     assert(r.status_code == requests.codes.no_content)
 
 def check_upgrade_status():
-    print("check")
+
     target = "api/system/upgrade"
     try:
         r = requests.get("http://%s/%s" %(BASE_IP, target))
