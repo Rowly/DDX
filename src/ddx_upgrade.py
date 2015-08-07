@@ -30,7 +30,7 @@ def login(retry=0):
         assert(r.status_code == requests.codes.ok)
         return r.json()["token"]
     except requests.exceptions.ConnectionError:
-        if retry < 10:
+        if retry < 3:
             retry += 1
             time.sleep(5)
             login(retry)
@@ -77,7 +77,12 @@ def test_for_fw(filename):
             elif (response_json["state"] == "IN PROGRESS") and (response_json["error"] != 0):
                 FAILS += 1
                 logging.info("ADDER: Execution %d, Passes %d, Fails %d" %(EXECUTION, PASSES, FAILS))
-                logging.info("ADDER: Error code %d" %response_json["error"])
+                logging.info("ADDER: Error code %d State %s" %(response_json["error"], response_json["state"]))
+                break
+            elif (response_json["state"] == "IDLE") and (response_json["error"] != 0):
+                FAILS += 1
+                logging.info("ADDER: Execution %d, Passes %d, Fails %d" %(EXECUTION, PASSES, FAILS))
+                logging.info("ADDER: Error code %d State %s" %(response_json["error"], response_json["state"]))
                 break
             else:
                 time.sleep(10)
