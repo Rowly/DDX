@@ -19,7 +19,7 @@ def logging_stop():
     time.sleep(1)
     logging.shutdown()
 
-def login():
+def login(retry=0):
     target = "api/auth/local"
     payload = {
                  "username": "admin",
@@ -30,8 +30,12 @@ def login():
         assert(r.status_code == requests.codes.ok)
         return r.json()["token"]
     except requests.exceptions.ConnectionError:
-        time.sleep(5)
-        login()
+        if retry < 10:
+            retry += 1
+            time.sleep(5)
+            login(retry)
+        else:
+            rais
 
 def send_upgrade_post(filename):
     token = login()
@@ -83,9 +87,6 @@ def test_for_fw(filename):
         logging.info("ADDER: %s" %e)
 
 if __name__ == "__main__":
-    global EXECUTION
-    global PASSES
-    global FAILS
     logging_start()
     while True:
         try:
