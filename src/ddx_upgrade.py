@@ -35,7 +35,7 @@ def login(retry=0):
             time.sleep(5)
             login(retry)
         else:
-            rais
+            raise
 
 def send_upgrade_post(filename):
     token = login()
